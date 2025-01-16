@@ -20,6 +20,8 @@
 #include "draw_structure.h"
 #include "shared.h"
 
+int need_structure_redraw = 1;
+
 /*-----------------------------------------------------------------------*/
 
 /*  Draw_Structure()
@@ -60,6 +62,11 @@ _Draw_Structure( cairo_t *cr )
 
 void Draw_Structure( cairo_t *cr )
 {
+	if (isFlagSet(ERROR_CONDX))
+		return;
+
+	need_structure_redraw = 0;
+
 	g_mutex_lock(&freq_data_lock);
 	_Draw_Structure( cr );
 	g_mutex_unlock(&freq_data_lock);
@@ -376,8 +383,8 @@ Draw_Wire_Segments( cairo_t *cr, Segment_t *segm, gint nseg )
     static double cmax; /* Max of seg current/charge */
     /* To color structure segs */
     double red = 0.0, grn = 0.0, blu = 0.0;
-    char label[11];
-    size_t s = sizeof( label );
+    char label[16];
+    size_t s = sizeof( label )-1;
 
     /* Loop over all wire segs, find max current/charge */
     if( crnt.newer )
@@ -657,6 +664,8 @@ New_Structure_Projection_Angle(void)
   structure_proj_params.sin_wi = sin(structure_proj_params.Wi/(double)TODEG);
   structure_proj_params.cos_wi = cos(structure_proj_params.Wi/(double)TODEG);
 
+  need_structure_redraw = 1;
+
   /* Trigger a redraw of structure drawingarea */
   if( structure_drawingarea && isFlagClear(INPUT_PENDING) )
   {
@@ -706,10 +715,10 @@ Show_Viewer_Gain(
       isFlagSet(DRAW_GAIN)     ||
       isFlagSet(FREQ_LOOP_RUNNING) )
   {
-    char txt[8];
+    char txt[16];
     if( isFlagSet(ENABLE_RDPAT) && (calc_data.freq_step >= 0) )
     {
-      snprintf( txt, sizeof(txt), "%7.2f", Viewer_Gain(proj_params, calc_data.freq_step) );
+      snprintf( txt, sizeof(txt)-1, "%.2f", Viewer_Gain(proj_params, calc_data.freq_step) );
       gtk_entry_set_text( GTK_ENTRY(Builder_Get_Object(builder, widget)), txt );
     }
   }

@@ -5319,7 +5319,7 @@ PLEASE read the documentation in the doc/ sub-directory as xnec2c is not fully c
   </object>
   <object class="GtkAdjustment" id="main_zoom_adjustment">
     <property name="lower">10</property>
-    <property name="upper">999</property>
+    <property name="upper">99999</property>
     <property name="value">100</property>
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
@@ -9284,7 +9284,7 @@ Save NEC2 Editor data first?
   </object>
   <object class="GtkAdjustment" id="rdpattern_zoom_adjustment">
     <property name="lower">10</property>
-    <property name="upper">999</property>
+    <property name="upper">99999</property>
     <property name="value">100</property>
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
@@ -9733,6 +9733,12 @@ Save NEC2 Editor data first?
                               <object class="GtkMenu" id="freqplots_pol_menu_menu">
                                 <property name="can-focus">False</property>
                                 <child>
+                                  <object class="GtkTearoffMenuItem">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                  </object>
+                                </child>
+                                <child>
                                   <object class="GtkRadioMenuItem" id="freqplots_total">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
@@ -9985,7 +9991,7 @@ Save NEC2 Editor data first?
                 <property name="can-focus">True</property>
                 <property name="hexpand">True</property>
                 <property name="editable">False</property>
-                <property name="max-length">6</property>
+                <property name="max-length">9</property>
                 <property name="invisible-char">●</property>
                 <property name="width-chars">6</property>
                 <property name="max-width-chars">6</property>
@@ -10020,7 +10026,7 @@ Save NEC2 Editor data first?
                 <property name="can-focus">True</property>
                 <property name="hexpand">True</property>
                 <property name="editable">False</property>
-                <property name="max-length">6</property>
+                <property name="max-length">9</property>
                 <property name="invisible-char">●</property>
                 <property name="width-chars">6</property>
                 <property name="max-width-chars">6</property>
@@ -10055,7 +10061,7 @@ Save NEC2 Editor data first?
                 <property name="can-focus">True</property>
                 <property name="hexpand">True</property>
                 <property name="editable">False</property>
-                <property name="max-length">6</property>
+                <property name="max-length">9</property>
                 <property name="invisible-char">●</property>
                 <property name="width-chars">6</property>
                 <property name="max-width-chars">6</property>
@@ -10090,7 +10096,7 @@ Save NEC2 Editor data first?
                 <property name="can-focus">True</property>
                 <property name="hexpand">True</property>
                 <property name="editable">False</property>
-                <property name="max-length">5</property>
+                <property name="max-length">9</property>
                 <property name="invisible-char">●</property>
                 <property name="width-chars">5</property>
                 <property name="max-width-chars">5</property>
@@ -10475,6 +10481,12 @@ Save NEC2 Editor data first?
                               <object class="GtkMenu" id="optimizer_output_submenu">
                                 <property name="can-focus">False</property>
                                 <child>
+                                  <object class="GtkTearoffMenuItem">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                  </object>
+                                </child>
+                                <child>
                                   <object class="GtkCheckMenuItem" id="optimizer_output">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
@@ -10575,6 +10587,12 @@ Save NEC2 Editor data first?
                                       <!-- This submenu is filled in by init_mathlib_menu() -->
                                       <object class="GtkMenu" id="main_mathlib_interactive_menu_menu">
                                         <property name="can-focus">False</property>
+                                        <child>
+                                          <object class="GtkTearoffMenuItem">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                          </object>
+                                        </child>
                                       </object>
                                     </child>
                                   </object>
@@ -10589,6 +10607,12 @@ Save NEC2 Editor data first?
                                       <!-- This submenu is filled in by init_mathlib_menu() -->
                                       <object class="GtkMenu" id="main_mathlib_batch_menu_menu">
                                         <property name="can-focus">False</property>
+                                        <child>
+                                          <object class="GtkTearoffMenuItem">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                          </object>
+                                        </child>
                                       </object>
                                     </child>
                                   </object>
@@ -10633,6 +10657,12 @@ Save NEC2 Editor data first?
                                       <!-- This submenu is filled in by init_mathlib_menu() -->
                                       <object class="GtkMenu" id="main_mathlib_benchmark_select_menu_menu">
                                         <property name="can-focus">False</property>
+                                        <child>
+                                          <object class="GtkTearoffMenuItem">
+                                            <property name="visible">True</property>
+                                            <property name="can-focus">False</property>
+                                          </object>
+                                        </child>
                                         <child>
                                           <object class="GtkCheckMenuItem" id="main_mathlib_select_menu_select_all">
                                             <property name="label" translatable="yes">Select All/None</property>
@@ -10720,6 +10750,15 @@ Save NEC2 Editor data first?
                           </object>
                         </child>
                         <child>
+                          <object class="GtkCheckMenuItem" id="config_main_loop_start">
+                            <property name="label" translatable="yes">Begin Frequency Loop at Startup</property>
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="use-underline">True</property>
+                            <signal name="toggled" handler="rc_callback_check_menu_item" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
                           <object class="GtkCheckMenuItem" id="confirm_quit">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
@@ -10790,6 +10829,12 @@ Save NEC2 Editor data first?
                             <child type="submenu">
                               <object class="GtkMenu" id="main_pol_menu_menu">
                                 <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkTearoffMenuItem">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                  </object>
+                                </child>
                                 <child>
                                   <object class="GtkRadioMenuItem" id="main_total">
                                     <property name="visible">True</property>
@@ -11121,9 +11166,9 @@ Save NEC2 Editor data first?
               <object class="GtkSpinButton" id="main_zoom_spinbutton">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="max-length">3</property>
-                <property name="width-chars">3</property>
-                <property name="max-width-chars">3</property>
+                <property name="max-length">5</property>
+                <property name="width-chars">5</property>
+                <property name="max-width-chars">5</property>
                 <property name="xalign">1</property>
                 <property name="shadow-type">etched-in</property>
                 <property name="input-purpose">number</property>
@@ -11290,7 +11335,7 @@ Save NEC2 Editor data first?
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="editable">False</property>
-                <property name="max-length">6</property>
+                <property name="max-length">9</property>
                 <property name="invisible-char">●</property>
                 <property name="width-chars">6</property>
                 <property name="max-width-chars">6</property>
@@ -11681,7 +11726,6 @@ Save NEC2 Editor data first?
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="use-underline">True</property>
-                            <property name="image">saveas_gnuplot</property>
                             <property name="use-stock">False</property>
                             <signal name="activate" handler="on_rdpattern_save_as_gnuplot_activate" swapped="no"/>
                           </object>
@@ -11738,6 +11782,12 @@ Save NEC2 Editor data first?
                             <child type="submenu">
                               <object class="GtkMenu" id="rdpattern_pol_menu_menu">
                                 <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkTearoffMenuItem">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                  </object>
+                                </child>
                                 <child>
                                   <object class="GtkRadioMenuItem" id="rdpattern_total">
                                     <property name="visible">True</property>
@@ -11807,6 +11857,12 @@ Save NEC2 Editor data first?
                               <object class="GtkMenu" id="rdpattern_gain_scaling_menu">
                                 <property name="can-focus">False</property>
                                 <child>
+                                  <object class="GtkTearoffMenuItem">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                  </object>
+                                </child>
+                                <child>
                                   <object class="GtkRadioMenuItem" id="rdpattern_linear_power">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
@@ -11863,6 +11919,12 @@ Save NEC2 Editor data first?
                             <child type="submenu">
                               <object class="GtkMenu" id="near_field_menu">
                                 <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkTearoffMenuItem">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                  </object>
+                                </child>
                                 <child>
                                   <object class="GtkCheckMenuItem" id="rdpattern_e_field">
                                     <property name="visible">True</property>
@@ -12201,9 +12263,9 @@ Save NEC2 Editor data first?
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="hexpand">True</property>
-                <property name="max-length">3</property>
-                <property name="width-chars">3</property>
-                <property name="max-width-chars">3</property>
+                <property name="max-length">5</property>
+                <property name="width-chars">5</property>
+                <property name="max-width-chars">5</property>
                 <property name="xalign">1</property>
                 <property name="shadow-type">etched-in</property>
                 <property name="input-purpose">number</property>
@@ -12575,7 +12637,7 @@ Save NEC2 Editor data first?
               <object class="GtkEntry" id="rdpattern_viewer_gain">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="max-length">6</property>
+                <property name="max-length">9</property>
                 <property name="invisible-char">●</property>
                 <property name="width-chars">6</property>
                 <property name="max-width-chars">6</property>

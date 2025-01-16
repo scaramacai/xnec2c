@@ -299,15 +299,14 @@ on_optimizer_output_toggled(
   if( gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menuitem)) )
   {
     GtkWidget *w = Builder_Get_Object(main_window_builder, "main_freqplots");
-    rc_config.main_loop_start = 1;
+
+    // Enable frequency data output to Optimizer's file
+    SetFlag( OPTIMIZER_OUTPUT );
 
     if (!gtk_check_menu_item_get_active( GTK_CHECK_MENU_ITEM(w)))
         gtk_check_menu_item_set_active( GTK_CHECK_MENU_ITEM(w), TRUE);
     else if(isFlagClear(FREQ_LOOP_DONE))
       Start_Frequency_Loop();
-
-    // Enable frequency data output to Optimizer's file
-    SetFlag( OPTIMIZER_OUTPUT );
 
     // Do an initial write in case the optimizer is waiting for the .csv:
     if (isFlagSet(FREQ_LOOP_DONE))
@@ -627,7 +626,7 @@ on_main_freqplots_activate(
         gtk_widget_hide( box );
       }
 
-      if( rc_config.main_loop_start && isFlagClear(FREQ_LOOP_DONE))
+      if( (rc_config.main_loop_start || isFlagSet(OPTIMIZER_OUTPUT)) && isFlagClear(FREQ_LOOP_DONE))
         Start_Frequency_Loop();
 
     } /* if( Main_Freqplots_Activate() */
@@ -2382,13 +2381,18 @@ on_nec2_row_add_clicked(
 
   /* Prime columns of new row */
   ncols = gtk_tree_model_get_n_columns( model );
-  if( ncols == 2 ) /* Comments treeview */
-    gtk_list_store_set( GTK_LIST_STORE(model), &iter, 0, "CM", -1 );
-  else
+  if( ncols == CMNT_NUM_COLS ) /* Comments treeview */
   {
-    int idx;
-    for( idx = 0; idx < ncols; idx++ )
-      gtk_list_store_set( GTK_LIST_STORE(model), &iter, idx, "--", -1 );
+    gtk_list_store_set( GTK_LIST_STORE(model), &iter, CMNT_COL_NAME, "CM", -1 );
+    Zero_Store(GTK_LIST_STORE(model), &iter, ncols, CMNT_COL_COMMENT, CMNT_COL_COMMENT);
+  }
+  else if( ncols == GEOM_NUM_COLS )
+  {
+    Zero_Store(GTK_LIST_STORE(model), &iter, ncols, GEOM_COL_NAME, -1);
+  }
+  else if( ncols == CMND_NUM_COLS )
+  {
+    Zero_Store(GTK_LIST_STORE(model), &iter, ncols, CMND_COL_NAME, -1);
   }
 
   SetFlag( NEC2_EDIT_SAVE );
@@ -4534,7 +4538,6 @@ on_loop_start_clicked(
     gpointer         user_data)
 {
   Start_Frequency_Loop();
-  rc_config.main_loop_start = 1;
 }
 
 
@@ -4544,7 +4547,6 @@ on_loop_pause_clicked(
     gpointer         user_data)
 {
   Stop_Frequency_Loop();
-  rc_config.main_loop_start = 0;
 }
 
 
@@ -4722,7 +4724,10 @@ on_main_zoom_spinbutton_value_changed(
 
   /* Trigger a redraw of structure drawingarea */
   if( structure_drawingarea )
+  {
+    need_structure_redraw = 1;
     xnec2_widget_queue_draw( structure_drawingarea );
+  }
 }
 
 
@@ -4792,6 +4797,7 @@ on_rdpattern_zoom_spinbutton_value_changed(
     rdpattern_proj_params.xy_scale1 * rdpattern_proj_params.xy_zoom;
 
   /* Trigger a redraw of structure drawingarea */
+  need_rdpat_redraw = 1;
   xnec2_widget_queue_draw( rdpattern_drawingarea );
 }
 
@@ -4836,6 +4842,7 @@ on_rdpattern_one_button_clicked(
       rdpattern_height,
       &rdpattern_proj_params );
 
+  need_rdpat_redraw = 1;
   xnec2_widget_queue_draw( rdpattern_drawingarea );
 }
 

@@ -91,7 +91,7 @@ static char *build_optstring(struct option *long_options)
 	return optstring;
 }
 
-static gint opt_start_optimizer_thread()
+static gint opt_start_optimizer_thread(void)
 {
 	GtkWidget *w;
 
@@ -176,6 +176,7 @@ main (int argc, char *argv[])
 
       case 'd': /* debug */
         rc_config.debug++;
+        rc_config.verbose += 3;
         break;
 
       case 'q': /* quiet */
@@ -202,7 +203,6 @@ main (int argc, char *argv[])
       case 'b': /* batch mode */
         pr_notice("batch mode enabled, will exit after first loop\n");
         rc_config.batch_mode = 1;
-        rc_config.main_loop_start = 1;
         break;
 
       case 'h': /* print usage and exit */
@@ -379,6 +379,9 @@ main (int argc, char *argv[])
 
   /* Read GUI state config file and reset geometry */
   Read_Config();
+
+  if (rc_config.batch_mode)
+	  rc_config.main_loop_start = 1;
 
   /* If input file is specified, get the working directory */
   if( strlen(rc_config.input_file) )
@@ -568,13 +571,6 @@ Open_Input_File( gpointer arg )
   gtk_widget_show( Builder_Get_Object(main_window_builder, "main_view_menuitem") );
   gtk_widget_show( structure_drawingarea );
 
-  /* If currents or charges draw button is active
-   * re-initialize structure currents/charges drawing */
-  if( isFlagSet(DRAW_CURRENTS) )
-    Main_Currents_Togglebutton_Toggled( TRUE );
-  if( isFlagSet(DRAW_CHARGES) )
-    Main_Charges_Togglebutton_Toggled( TRUE );
-
   /* Set input file to NEC2 editor. It will only
    * happen if the NEC2 editor window is open */
   new = *( (gboolean *)arg );
@@ -597,13 +593,13 @@ Open_Input_File( gpointer arg )
     }
 
     /* Simulate activation of main rdpattern button */
-    if( isFlagClear(OPTIMIZER_OUTPUT) )
+    if( isFlagClear(OPTIMIZER_OUTPUT) && !rc_config.main_loop_start)
       Main_Rdpattern_Activate( FALSE );
 
     /* Select display of radiation or EH pattern */
     if( isFlagSet(DRAW_GAIN) )
     {
-      if( isFlagClear(OPTIMIZER_OUTPUT) )
+      if( isFlagClear(OPTIMIZER_OUTPUT) && !rc_config.main_loop_start)
         Rdpattern_Gain_Togglebutton_Toggled( TRUE );
     }
     else if( isFlagSet(DRAW_EHFIELD) )
@@ -626,7 +622,7 @@ Open_Input_File( gpointer arg )
   {
     GtkWidget *box = Builder_Get_Object( freqplots_window_builder, "freqplots_box" );
     gtk_widget_show( box );
-    if( rc_config.main_loop_start )
+    if( rc_config.main_loop_start || isFlagSet(OPTIMIZER_OUTPUT) )
     {
       Main_Freqplots_Activate();
       Start_Frequency_Loop();
@@ -666,6 +662,13 @@ Open_Input_File( gpointer arg )
 
   // Unlock the mutex:
   g_mutex_unlock(&global_lock);
+
+  /* If currents or charges draw button is active
+   * re-initialize structure currents/charges drawing */
+  if( isFlagSet(DRAW_CURRENTS) )
+    Main_Currents_Togglebutton_Toggled( TRUE );
+  if( isFlagSet(DRAW_CHARGES) )
+    Main_Charges_Togglebutton_Toggled( TRUE );
 
   return( FALSE );
 } /* Open_Input_File() */

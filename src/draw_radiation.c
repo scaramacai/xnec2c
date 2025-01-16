@@ -23,6 +23,8 @@
 /* For coloring rad pattern */
 static double *red = NULL, *grn = NULL, *blu = NULL;
 
+int need_rdpat_redraw = 1;
+
 /* Buffered points in 3d (xyz) space
  * forming the radiation pattern */
 static point_3d_t *point_3d = NULL;
@@ -101,12 +103,22 @@ Draw_Radiation_Pattern( cairo_t *cr )
   double dph = (double)fpat.dph * (double)TORAD;
 
   /* Used to set text in labels */
-  gchar txt[8];
+  gchar txt[16];
 
   /* Abort if rad pattern cannot be drawn */
   fstep = calc_data.freq_step;
-  if( isFlagClear(ENABLE_RDPAT) || (fstep < 0) )
-    return;
+  if ( isFlagClear(ENABLE_RDPAT) )
+	  return;
+
+  /* If fstep is invalid, try to use data from the last FR card run.  Note that
+   * calc_data.steps_total is the count of frequencies from the FR card, but we
+   * always allocate +1 for the user-selected "green line" frequency. This,
+   * calc_data.steps_total is the index of the green-line frequency, and -1 is
+   * the last FR card frequency.  Thus, we use calc_data.steps_total-1:
+   */
+  if ( (fstep < 0 || fstep >= (calc_data.steps_total))
+      && rad_pattern != NULL && rad_pattern[0].gtot != NULL)
+    fstep = calc_data.steps_total-2;
 
   pol = calc_data.pol_type;
 
@@ -221,13 +233,13 @@ Draw_Radiation_Pattern( cairo_t *cr )
     } /* for( nph = 1; nph < fpat.nph; nph++ ) */
 
     /* Show max gain on color code bar */
-    snprintf( txt, 8, "%6.1f", rad_pattern[fstep].max_gain[pol] );
+    snprintf( txt, sizeof(txt)-1, "%.2f", rad_pattern[fstep].max_gain[pol] );
     gtk_label_set_text( GTK_LABEL(Builder_Get_Object(
             rdpattern_window_builder, "rdpattern_colorcode_maxlabel")),
         txt );
 
     /* Show min gain on color code bar */
-    snprintf( txt, 6, "%4.1f", rad_pattern[fstep].min_gain[pol] );
+    snprintf( txt, sizeof(txt)-1, "%.2f", rad_pattern[fstep].min_gain[pol] );
     gtk_label_set_text(GTK_LABEL(Builder_Get_Object(
             rdpattern_window_builder, "rdpattern_colorcode_minlabel")),
         txt );
@@ -593,11 +605,6 @@ _Draw_Radiation( cairo_t *cr )
   if( isFlagClear(ENABLE_EXCITN) )
     return FALSE;
 
-  /* Don't draw radiation pattern when freq
-   * loop is running and optimizer enabled */
-  if( isFlagSet(OPTIMIZER_OUTPUT) && isFlagSet(FREQ_LOOP_RUNNING) )
-    return FALSE;
-
   // Try to hold the lock to prevent drawing the radiation pattern
   // since it could be drawing while inotify triggers a new freqloop:
   int locked = g_mutex_trylock(&global_lock);
@@ -622,6 +629,11 @@ _Draw_Radiation( cairo_t *cr )
 int Draw_Radiation( cairo_t *cr )
 {
 	int ret;
+
+	if (isFlagSet(ERROR_CONDX))
+		return FALSE;
+
+	need_rdpat_redraw = 0;
 
 	g_mutex_lock(&freq_data_lock);
 	ret = _Draw_Radiation( cr );
@@ -838,9 +850,10 @@ New_Radiation_Projection_Angle(void)
   rdpattern_proj_params.sin_wi = sin(rdpattern_proj_params.Wi/(double)TODEG);
   rdpattern_proj_params.cos_wi = cos(rdpattern_proj_params.Wi/(double)TODEG);
 
+  need_rdpat_redraw = 1;
+
   /* Trigger a redraw of radiation drawingarea */
-  if( isFlagSet(DRAW_ENABLED) && 
-	  (isFlagClear(OPTIMIZER_OUTPUT) || isFlagClear(FREQ_LOOP_RUNNING)))
+  if( isFlagSet(DRAW_ENABLED) )
   {
     xnec2_widget_queue_draw( rdpattern_drawingarea );
   }

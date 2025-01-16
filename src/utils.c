@@ -26,7 +26,7 @@
 #include "utils.h"
 #include "shared.h"
 
-char **_get_backtrace();
+char **_get_backtrace(void);
 void _print_backtrace(char **strings);
 
 
@@ -71,12 +71,32 @@ usage(void)
 int Notice(char *title, char *message,  GtkButtonsType buttons)
 {
 	int response;
+	int locked = 0;
+
+	if (!g_mutex_trylock(&freq_data_lock))
+		locked = 1;
+	else
+		g_mutex_unlock(&freq_data_lock);
+
+	if (!g_mutex_trylock(&global_lock))
+		locked = 1;
+	else
+		g_mutex_unlock(&global_lock);
+
+	if (locked)
+	{
+		pr_err("\n=== Notice: %s ===\n%s\n\n", title, message);
+
+		return 0;
+	}
+
+	pr_notice("\n=== Notice: %s ===\n%s\n\n", title, message);
+
 	GtkWidget *notice = gtk_message_dialog_new(GTK_WINDOW(main_window),
 		GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
 		buttons,
 		"%s", title);
 
-	pr_notice("\n=== Notice: %s ===\n%s\n\n", title, message);
 	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(notice), "%s", message);
 
 	response = gtk_dialog_run(GTK_DIALOG(notice));
@@ -94,22 +114,41 @@ Stop( char *mesg, int err )
 {
   GtkBuilder *builder;
 
+  int locked = 0;
+
+  if (!g_mutex_trylock(&freq_data_lock))
+    locked = 1;
+  else
+    g_mutex_unlock(&freq_data_lock);
+
+  if (!g_mutex_trylock(&global_lock))
+    locked = 1;
+  else
+    g_mutex_unlock(&global_lock);
+
   pr_err("Stop: %s\n", mesg);
+
   /* For child processes */
   if( CHILD )
   {
-    pr_err("%s\n", mesg);
     if( err )
     {
-      pr_crit("child process %d exiting\n", num_child_procs);
-      _exit(-1);
+      pr_crit("%s\n", mesg);
     }
-    else return( err );
+    else
+    {
+      pr_err("%s\n", mesg);
+    }
+    return( err );
 
   } /* if( CHILD ) */
 
-  /* Stop operation */
-  Stop_Frequency_Loop();
+  SetFlag(FREQ_LOOP_STOP);
+
+  if (!locked)
+    /* Stop operation */
+    Stop_Frequency_Loop();
+
 
   /* Create error dialog */
   if( !error_dialog )
@@ -790,9 +829,19 @@ guint g_idle_add_once_sync(GSourceOnceFunc function, gpointer data)
 void xnec2_widget_queue_draw(GtkWidget *w)
 {
 	// Only redraw the rdpattern when FREQ_LOOP_DONE or it the window will flash grey:
-	if (w == rdpattern_drawingarea && isFlagSet(OPTIMIZER_OUTPUT) && isFlagSet(FREQ_LOOP_RUNNING))
+	if (w == rdpattern_drawingarea &&
+	    isFlagSet(OPTIMIZER_OUTPUT) &&
+	    isFlagSet(FREQ_LOOP_RUNNING) &&
+	    !need_rdpat_redraw)
 	{
 		pr_debug("Optimizer loop incomplete, skipping radiation pattern redraw.\n");
+	}
+	else if (w == structure_drawingarea &&
+	    isFlagSet(OPTIMIZER_OUTPUT) &&
+	    isFlagSet(FREQ_LOOP_RUNNING) &&
+	    !need_structure_redraw)
+	{
+		pr_debug("Optimizer loop incomplete, skipping structure redraw.\n");
 	}
 	else
 		g_idle_add_once((GSourceOnceFunc)gtk_widget_queue_draw, w);
@@ -813,7 +862,7 @@ void _print_backtrace(char **strings)
 }
 
 // Return an array of backtrace strings.  The value returned must be free()'ed.
-char **_get_backtrace()
+char **_get_backtrace(void)
 {
 #ifdef HAVE_BACKTRACE
 	void *array[10];

@@ -524,6 +524,15 @@ conect( int ignd )
           if( ic >= segj.maxcon )
           {
             segj.maxcon = ic+1;
+            if (segj.maxcon > data.n*(data.n-1))
+            {
+              pr_err("Segment connection count exceeds a full mesh, which is unlikely: data.n=%ld segj.maxcon=%lu\n",
+                (long)data.n, (long)segj.maxcon);
+	      Stop("Segment connection count exceeds a full mesh, which is unlikely!\n"
+		   "Check for overlapping or nearly-connected segments\n", ERR_STOP);
+	      return FALSE;
+            }
+
             mreq = (size_t)segj.maxcon * sizeof(int);
             mem_realloc( (void **)&segj.jco, mreq, "in geometry.c" );
           }
@@ -766,7 +775,8 @@ isegno( int itagi, int mx)
   } /* if( data.n > 0) */
 
   pr_err("no segment has an itag of %d\n", itagi);
-  Stop( _("Segment tag number error"), ERR_OK );
+  Stop( _("Segment tag number error.  You are (probably) referencing an unknown tag or\n"
+          "segment number in a control card."), ERR_OK );
 
   return( -1 );
 }

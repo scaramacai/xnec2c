@@ -1378,7 +1378,7 @@ void unere(double xob, double yob, double zob);
 /* fork.c */
 void Child_Process(int num_child);
 ssize_t Write_Pipe(int idx, char *str, ssize_t len, gboolean err);
-void Get_Freq_Data(int idx, int fstep);
+int Get_Freq_Data(int idx, int fstep);
 /* geom_edit.c */
 void Wire_Editor(int action);
 void Patch_Editor(int action);
@@ -1471,6 +1471,7 @@ int solve(int n, _Complex double *a, int *ip, _Complex double *b, int ndim);
 int solve_gauss_elim( int n, complex double *a, int *ip, complex double *b, int ndim );
 void solves(_Complex double *a, int *ip, _Complex double *b, int neq, int nrh, int np, int n, int mp, int m);
 /* nec2_model.c */
+void Zero_Store(GtkListStore *store, GtkTreeIter *iter, int ncols, int start_idx, int stop_idx);
 void Nec2_Input_File_Treeview(int action);
 void cell_edited_callback(GtkCellRendererText *cell, gchar *path, gchar *new_text, gpointer user_data);
 void Save_Nec2_Input_File(GtkWidget *treeview_window, char *nec2_file);
@@ -1480,12 +1481,12 @@ void load(int *ldtyp, int *ldtag, int *ldtagf, int *ldtagt, double *zlr, double 
 /* optimize.c */
 void Write_Optimizer_Data(void);
 void *Optimizer_Output(void *arg);
-int opt_have_files_to_save();
+int opt_have_files_to_save(void);
 /* plot_freqdata.c */
 void Plot_Frequency_Data(cairo_t *cr);
 void Plots_Window_Killed(void);
 void Set_Frequency_On_Click(GdkEvent *event);
-int freqplots_click_pending();
+int freqplots_click_pending(void);
 /* radiation.c */
 void rdpat(void);
 /* rc_config.c */
@@ -1539,6 +1540,6 @@ gboolean Frequency_Loop(gpointer udata);
 gboolean Start_Frequency_Loop(void);
 void Stop_Frequency_Loop(void);
 void Incident_Field_Loop(void);
-int set_freq_step();
+int set_freq_step(void);
 
 #endif

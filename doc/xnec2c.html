@@ -54,8 +54,9 @@ If you prefer to download .tar.gz files they are available on our
 	<li>
 	You will need the Gnome development libraries and build tools installed for your distribution:
 	<ul>
-		<li>Debian/Ubuntu: apt-get install build-essential gnome-devel libgtk-3-dev gettext autopoint</li>
+		<li>Debian/Ubuntu: apt-get install build-essential autoconf libtool gnome-devel libgtk-3-dev gettext autopoint gnome-icon-theme desktop-file-utils</li>
 		<li>CentOS: yum install gcc make automake autoconf gtk3-devel gettext-devel libtool</li>
+		<li>Note: some distributions may need the `autoconf-archive` package.
 	</ul>
 	</li>
 	<li>
@@ -120,7 +121,7 @@ Window</a></li>
 <li><a href="#Optimizers">External Optimizers</a></li>
 </ul>
 </li>
-<li><a href="#InputFile">Input File Considerations</a></li>
+<li><a href="#InputFile">Input File Considerations and NEC2 Card Reference</a></li>
 <li><a href="#OutputFile">Output File Considerations</a></li>
 <li><a href="#Version">Version History</a></li>
 <li><a href="#Limitations">Limitations</a></li>
@@ -320,7 +321,7 @@ be equal to the number of processors in a SMP machine. <b>Please
 note</b> that its pointless and counter-productive to specify a
 value of n greater than the number of steps in the frequency
 loop, or greater than the number of logical CPUs on your system.
-tarting in version 4.3, xnec2c always forks at least one job
+Starting in version 4.3, xnec2c always forks at least one job
 for better UI responsiveness.  If you wish to disable forking for
 debug or testing then specify -j0.<br></p>
 <p><b><a name="MainWindow" id="MainWindow">The Main
@@ -587,7 +588,7 @@ impedance.<br>
 quantity to the Net Gain of the array. Net Gain is the effective
 gain after subtracting the effects of reflection caused by 
 impedance mismatch (return loss); Net Gain is equal to Raw Gain
-when VSWR&asymp;1.0 (S11&asymp;0.0).</p>
+when VSWR&asymp;1.0 (S11&asymp;-&infin;).</p>
 <p>The Frequency Loop control buttons at the top right can be use
 to Start, Pause or Reset the loop. As the loop progresses, more
 data will be presented in the graphs and in the text entry widgets
@@ -899,8 +900,15 @@ was designed to visualize output data graphically, certain types of
 output data requests are not supported (e.g. the surface wave
 pattern option (I1=1) of the RP command etc). An error message
 dialog will hopefully appear to inform the user of unsupported
-commands or options. Here is a list of commands or command options
-not supported by xnec2c:</p>
+commands or options.
+<br/><br/>
+Since xnec2c is an implementation of NEC2.  You can learn more about the NEC2
+format at <a href="http://www.nec2.org">http://www.nec2.org</a>. Be sure to review
+<a href="http://www.nec2.org/part_3/toc.html">Part III: NEC User's Guide</a>.
+
+Here is a list of commands or command options not supported by xnec2c:
+
+</p>
 <p><b>GF:</b> Read Numerical Green's Function: Relevant code has
 been removed in nec2c since this type of solution is obsolete.<br>
 <b>WG:</b> Write Numerical Green's Function: Relevant code has been
@@ -932,6 +940,111 @@ needed then it is better to use the original NEC2 program, to avoid
 bugs that may still be lurking in the C translation.</p>
 <p><b><a name="Version" id="Version">7. Version
 History (newest first):</a></b></p>
+
+<p><b>Version 4.4.16:</b>
+The primary purpose of this release is to fix building on sparc64.
+Additionally, there have been several code cleanups.  I would like the thank
+Diane Bruce for inspiring the code cleanup and helping with pull requests;
+also, a big thank-you to the Debian maintainer, Dave Hibberd (@Hibby), who
+helped troubleshoot and provide guidance in solving the sparc64 build issue.
+</p>
+
+<p><b>Version 4.4.15:</b>
+This release fixes a crash related to a GTK icon problem.
+Thanks to @AsciiWolf for helping report and troubleshoot the issue.
+</p>
+
+<p><b>Version 4.4.14:</b>
+This release fixes a hang when the frequency plots window is too small
+for the number of plots being rendered.  Thanks to Tom DL1JBE who reported
+the issue.
+</p>
+
+<p><b>Version 4.4.13:</b>
+
+This is a large bug-fix release and includes a few minor features and
+documentation updates. I would like to thank the following who helped with new
+features and bug fixes, in order of contribution:
+
+<ul>
+	<li>Contributors:
+		<ul>
+			<li>Neoklis 5B4AZ</li>
+			<li>Rafal Lukawiecki EI6LA</li>
+			<li>@ndim</li>
+			<li>@anoduck</li>
+			<li>@rklasen</li>
+			<li>Ward, AE6TY</li>
+			<li>@ChrisMaple</li>
+		</ul>
+	</li>
+
+	<li>Features:
+		<ul>
+			<li>Save window positions when they are closed</li>
+			<li>Tile rdpattern and freqplot windows on first run</li>
+			<li>Default the Radiation Pattern "Gain Pattern" to be enabled</li>
+			<li>Officially support OpenBSD, thanks @anoduck for testing</li>
+			<li>Add save radiation pattern to CSV</li>
+			<li>Add save currents and charges to CSV</li>
+		</ul>
+	</li>
+	<li>Documentation:
+		<ul>
+			<li>Added External Optimizers section</li>
+			<li>Added Google Translate javascript for the website</li>
+		</ul>
+	</li>
+	<li>Bug Fixes:
+		<ul>
+			<li>Fixed deadlock when the frequency loop is running and a window is</li>
+			  closed. Thanks to Neoklis 5B4AZ for discovering the problem and proposing</li>
+			  a solution.</li>
+			<li>Fixed edge case where structure window does not redraw on save. Thanks</li>
+			  to Neoklis 5B4AZ for discovering the problem and providing a fix.</li>
+			<li>Fix blank plots, structures and radiation pattern when Quit is pressed.</li>
+			<li>Open the Frequency Plots window when Optimization is enabled</li>
+			<li>Auto-run freq loop when optimization is enabled</li>
+			<li>Differentiate between windows at 0,0 and never opened</li>
+			<li>Correct a relatively trivial warning from Coverity Scan about an</li>
+			  unused value</li>
+			<li>Fix warning from Coverity Scan about invalid argument to a function</li>
+			<li>Fix a warning by Coverity Scan about an unterminated buffer</li>
+			<li>Fix Coverity Scan warning about a tainted value used in malloc()</li>
+			<li>Fix a Coverity Scan report about a "Forward NULL"</li>
+			<li>Convert double-locking synchronization to use a condition</li>
+			  variable. Thanks to @anoduck for testing and reporting the issue in the</li>
+			  process of adding OpenBSD support.</li>
+			<li>Fix warning: while loop has empty body</li>
+			<li>Fix real/imag swap</li>
+			<li>rdpat csv: reset phi on each frequency iteration</li>
+			<li>fix integer overflow in frequency selection, thanks to @rklasen.</li>
+			<li>Fix sommerfeld ground excitement issue. Thanks to Ward, AE6TY for</li>
+			  reporting the bug and writing a fix.</li>
+			<li>Fix off-by-one array index</li>
+			<li>Fix sprintf truncation when plotting. Thanks to @ChrisMaple for</li>
+			  reporting this issue.</li>
+			<li>Delay clicked frequency calculation while a freq loop is running</li>
+			<li>Fix beeps on GTK field overflow</li>
+		</ul>
+	</li>
+	<li>Build system:
+		<ul>
+			<li>Huge autoconf and buildsystem refactor by @ndim</li>
+			<li>Updated autoconf to detect Mac OS X properly</li>
+			<li>Fix Debian Lintian desktop-mime-but-no-exec-code</li>
+			<li>Removed more LMID references</li>
+			<li>Changed host_os is not supported to be a warning</li>
+			<li>Actually check if backtrace exists.</li>
+			<li>Add g_module_supported detection</li>
+			<li>Added OARS metadata into AppStream</li>
+			<li>Updated autoconf to detect Mac OS X and set LDFLAGS
+			accordingly. Big thanks to Rafal Lukawiecki EI6LA for helping
+			troubleshoot and get xnec2c building on OSX.</li>
+		</ul>
+	</li>
+</ul>
+</p>
 
 <p><b>Version 4.4.12:</b>
 This release has been pending for a while, there are quite a few changes.

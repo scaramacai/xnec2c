@@ -432,7 +432,7 @@ Child_Process( int num_child )
 
       case INFILE: /* Read input file */
         retval = Read_Pipe( num_child, rc_config.input_file, sizeof(rc_config.input_file), FALSE );
-        rc_config.input_file[retval] = '\0';
+        rc_config.input_file[retval-1] = '\0';
         Child_Input_File();
         break;
 
@@ -565,7 +565,7 @@ static ssize_t PRead_Pipe(int idx, char *str, ssize_t len, gboolean err)
  *
  * Be sure to hold the freq_data_lock mutex when calling this function.
  */
-  void
+  int
 Get_Freq_Data( int idx, int fstep )
 {
   char *buff = NULL, flag;
@@ -603,7 +603,7 @@ Get_Freq_Data( int idx, int fstep )
 
   /* Notification to read near field data */
   if (PRead_Pipe( idx, nfeh, 4, TRUE ) < 0)
-	  return;
+	  return 0;
 
   nfeh[4] = '\0';
 
@@ -635,7 +635,7 @@ Get_Freq_Data( int idx, int fstep )
   if (PRead_Pipe( idx, buff, (ssize_t)buff_size, TRUE ) < 0)
   {
 	  free_ptr((void **)&buff);
-	  return;
+	  return 0;
   }
 
   /* Get current and charge data */
@@ -745,6 +745,7 @@ Get_Freq_Data( int idx, int fstep )
 
   free_ptr( (void **)&buff );
 
+  return 1;
 } /* Get_Freq_Data() */
 
 /*------------------------------------------------------------------------*/

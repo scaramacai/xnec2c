@@ -56,7 +56,7 @@ static inline void pango_text_size(GtkWidget* widget, int *width, int *height, c
     g_object_unref( layout );
 }
 
-void fr_plots_init()
+void fr_plots_init(void)
 {
   int idx;
 
@@ -247,8 +247,8 @@ void draw_text(cairo_t *cr, GtkWidget *widget,
 Display_Frequency_Data( void )
 {
   int fstep;
-  double vswr;
-  char txt[12];
+  double vswr, zreal, zimag;
+  char txt[16];
 
   measurement_t meas;
 
@@ -266,31 +266,40 @@ Display_Frequency_Data( void )
   meas_calc(&meas, fstep);
 
   /* Display max gain */
-  snprintf( txt, 7, "%5.1f", meas.gain_max );
+  snprintf( txt, sizeof(txt)-1, "%.2f", meas.gain_max );
   gtk_entry_set_text( GTK_ENTRY(Builder_Get_Object(
           freqplots_window_builder, "freqplots_maxgain_entry")), txt );
 
   /* Display frequency */
-  snprintf( txt, 11, "%9.3f", (double)calc_data.freq_mhz );
+  snprintf( txt, sizeof(txt)-1, "%.3f", (double)calc_data.freq_mhz );
   gtk_entry_set_text( GTK_ENTRY(Builder_Get_Object(
           freqplots_window_builder, "freqplots_fmhz_entry")), txt );
 
+  // Prevent UI overflows that cause beeps:
   vswr = meas.vswr;
   if( vswr > 999.0 )
     vswr = 999.0;
 
+  zreal = meas.zreal;
+  if (zreal > 1e6)
+	  zreal = 999999;
+
+  zimag = meas.zimag;
+  if (zimag > 1e6)
+	  zimag = 999999;
+
   /* Display VSWR */
-  snprintf( txt, 7, "%5.1f", vswr );
+  snprintf( txt, sizeof(txt)-1, "%.2f", vswr );
   gtk_entry_set_text( GTK_ENTRY(Builder_Get_Object(
           freqplots_window_builder, "freqplots_vswr_entry")), txt );
 
   /* Display Z real */
-  snprintf( txt, 7, "%5.1f", (double)meas.zreal);
+  snprintf( txt, sizeof(txt)-1, "%.1f", zreal);
   gtk_entry_set_text( GTK_ENTRY(Builder_Get_Object(
           freqplots_window_builder, "freqplots_zreal_entry")), txt );
 
   /* Display Z imaginary */
-  snprintf( txt, 7, "%5.1f", (double)meas.zimag);
+  snprintf( txt, sizeof(txt)-1, "%.1f", zimag);
   gtk_entry_set_text( GTK_ENTRY(Builder_Get_Object(
           freqplots_window_builder, "freqplots_zimag_entry")), txt );
 
@@ -408,6 +417,7 @@ Fit_to_Scale2( double *max1, double *min1,
   // Do nothing in these cases 
   if( *max1 <= *min1 ) return;
   if( *max2 == *min2 ) return;
+  if( *nval < 3 ) return;
 
   /* Provide a made-up range if max = min */
   if( *max1 == *min1 )
@@ -637,8 +647,9 @@ Plot_Vertical_Scale(
   double vstep = 1.0;
   char value[16], format[16];
 
-  /* Abort if not enough values to plot */
-  if( nval <= 1 ) return;
+  /* only plot min/max if there are not enough values to plot */
+  if( nval <= 1 )
+    nval = 2;
 
   /* Calculate step between scale values */
   vstep = (max-min) / (double)(nval-1);
@@ -771,7 +782,7 @@ Draw_Graph(
   double ra, rb;
   int idx;
   GdkPoint *points = NULL;
-  char s[20];
+  char s[23];
 
   /* Cairo context */
   cairo_set_source_rgb( cr, red, grn, blu );
@@ -1570,6 +1581,8 @@ _Plot_Frequency_Data( cairo_t *cr )
 
 void Plot_Frequency_Data( cairo_t *cr )
 {
+	if (isFlagSet(ERROR_CONDX))
+		return;
 	g_mutex_lock(&freq_data_lock);
 	_Plot_Frequency_Data( cr );
 	g_mutex_unlock(&freq_data_lock);
@@ -1619,7 +1632,7 @@ void save_click_event(GdkEvent *e)
 	memcpy(prev_click_event, e, sizeof(GdkEvent));
 }
 
-int freqplots_click_pending()
+int freqplots_click_pending(void)
 {
 	return prev_click_event != NULL;
 }
@@ -1800,15 +1813,15 @@ _Set_Frequency_On_Click( GdkEvent *e)
 
   if (set_fmhz)
   {
-	  /* Round frequency to nearest 1 kHz */
-	  int ifmhz = ( fmhz * 1e6 + 0.5 );
+	  /* Round frequency to nearest 1 Hz */
+	  uint64_t ifmhz = ( fmhz * 1e6 + 0.5 );
 	  fmhz = ifmhz / 1e6;
 
 	  /* Save frequency for later use when the graph plots after the NEC2 run */
 	  calc_data.fmhz_save = fmhz;
 
 	  /* Set frequency spinbuttons on new freq */
-	  if( fmhz != calc_data.freq_mhz )
+	  if( isFlagClear(FREQ_LOOP_RUNNING) && fmhz != calc_data.freq_mhz )
 	  {
 		gtk_spin_button_set_value( mainwin_frequency, fmhz );
 		if( isFlagSet(DRAW_ENABLED) )

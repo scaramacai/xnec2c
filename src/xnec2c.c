@@ -35,7 +35,7 @@ static double tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
  *
  * If it doesn't, return 0 so the caller can run New_Frequency() and
  * use the extra buffer (in rad_pattern and other structures). */
-int set_freq_step()
+int set_freq_step(void)
 {
 	int fr, step;
 	double freq;
@@ -85,7 +85,7 @@ int set_freq_step()
  * Scales geometric parameters to frequency
  */
   static void
-Frequency_Scale_Geometry()
+Frequency_Scale_Geometry(void)
 {
   double fr;
   int idx;
@@ -499,8 +499,8 @@ static gboolean retval; /* Function's return value */
 int update_freqplots_fmhz_entry(gpointer p)
 {
     /* Display current frequency in plots entry */
-    char txt[10];
-    snprintf( txt, sizeof(txt), "%9.3f", calc_data.freq_mhz );
+    char txt[16];
+    snprintf( txt, sizeof(txt)-1, "%.3f", calc_data.freq_mhz );
     gtk_entry_set_text( GTK_ENTRY(Builder_Get_Object(
             freqplots_window_builder, "freqplots_fmhz_entry")), txt );
 
@@ -777,7 +777,14 @@ gboolean Frequency_Loop( gpointer udata )
         if( FD_ISSET(forked_proc_data[idx]->child2pnt_pipe[READ], &read_fds) )
         {
           /* Read data from finished child process */
-          Get_Freq_Data( idx, forked_proc_data[idx]->fstep );
+          if (!Get_Freq_Data( idx, forked_proc_data[idx]->fstep ))
+          {
+            pr_err("Failed to read data from forked child\n");
+            SetFlag(FREQ_LOOP_STOP);
+            g_mutex_unlock(&freq_data_lock);
+            g_mutex_unlock(&global_lock);
+            return FALSE;
+          }
 
           /* Clear "last-used-frequency" buffer, the local version of the data is
            * no longer what New_Frequency() set it to: */
@@ -984,6 +991,10 @@ void *Frequency_Loop_Thread(void *p)
 		g_idle_add_once_sync((GSourceOnceFunc)update_freq_mhz_spin_button_value, rdpattern_frequency);
 		g_idle_add_once_sync((GSourceOnceFunc)update_freq_mhz_spin_button_value, mainwin_frequency);
 		g_idle_add_once_sync((GSourceOnceFunc)Redo_Currents, NULL);
+
+		need_rdpat_redraw = 1;
+		need_structure_redraw = 1;
+		g_idle_add_once_sync((GSourceOnceFunc)gtk_widget_queue_draw, structure_drawingarea);
 		g_idle_add_once_sync((GSourceOnceFunc)gtk_widget_queue_draw, rdpattern_drawingarea);
 	}
 
@@ -1052,6 +1063,8 @@ Stop_Frequency_Loop( void )
 		  pthread_join(*pth_freq_loop, NULL);
 		  free_ptr((void**)&pth_freq_loop);
 	  }
+
+	  ClearFlag(FREQ_LOOP_STOP);
 
 	  // Flush any pending GTK events. This is critical because any pending
 	  // events that may work upon GtkWidget's that change (or close) upon exit
